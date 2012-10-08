@@ -18,6 +18,7 @@ void setupUSEFlags(){
 }
 void setupPorts(){
 	std.file.mkdir("~/.arPac");
+	std.file.mkdir("~/.arPac/tmp");
 }
 void setupPackageList(){
 	std.file.mkdir("/etc/arPac");
