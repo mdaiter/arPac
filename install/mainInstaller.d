@@ -4,12 +4,13 @@ import std.file;
 import std.string;
 import std.process;
 import std.net.curl;
+import builder;
 
 /*Because structs didn't work in passing into a function... :-(*/
 class buildTemplate{
-	string[] allUseFlags;
-	string[] userWantedFlags;
-	string[] buildCommands;
+	private string[] allUseFlags;
+	private string[] userWantedFlags;
+	private string[] buildCommands;
 
 	
 	public void setUseFlags(string[] alluseFlags){
@@ -26,7 +27,19 @@ class buildTemplate{
 		buildCommands.length = bC.length;
 		buildCommands = bC[];
 	}
+	
+	public string[] getAllUseFlags(){
+		return allUseFlags;
+	}
 
+	public string[] getUserWantedFlags(){
+		return userWantedFlags;
+	}
+
+	public string[] getBuildCommands(){
+		return buildCommands;
+	}
+		
 	~this(){
 		delete allUseFlags;
 		delete userWantedFlags;
@@ -74,16 +87,17 @@ private void instantiateInstall(string packageName){
 			writefln("Starting the build of %s", line[8..line.length]);
 		}
 		if (line.length > 6 && line[0..7] == "SOURCE="){
-			downloadAndUnzip(line[8..line.length]);
+			writeln(line[8..line.length]~"is the dpin");
+			downloadAndUnzip(line[8..line.length], packageName);
 		}
 		if (line.length > 3 && line[0..4] == "USE="){
 			writefln("Got past first %s", line[4..line.length]);
 			string tempLine = cast(string)line[4..line.length];
 			generateUSE(buildFile, tempLine, packageName);
-			writefln("%d", buildFile.allUseFlags.length);
 		}
 		if (line.length > 7 && line[0..8] == "build(){"){
 			writeln("Hit build()!");
+			builder.buildMeta(buildFile, packageName);
 		}
 	}
 }
@@ -96,7 +110,7 @@ private void generateUSE(buildTemplate sampleBuildFile, string lineOfUseFlags, s
 	foreach(line; File("/etc/arPac/package.use").byLine()){
 		//Check if the line is for the package
 		if (line.length > easierPacName.length && line[0..easierPacName.length] == easierPacName){
-			sampleBuildFile.setUserWantedFlags(tok(cast(string)line[easierPacName.length..line.length]));
+			sampleBuildFile.setUserWantedFlags(tok(cast(string)line[easierPacName.length+1..line.length]));
 			break;
 		}
 	}
@@ -106,10 +120,11 @@ private void generateUSE(buildTemplate sampleBuildFile, string lineOfUseFlags, s
 	}
 }
 
-private void downloadAndUnzip(char[] downloadFile){
+private void downloadAndUnzip(char[] downloadFile, string pkgName){
 	try{
 		download(downloadFile, "/tmp/tmpDownloadFile.tar.gz");
-		std.process.system("tar -xvf /tmp/packageDownloadFile.tar.gz -C ~/.arPac/tmp/");
+		std.file.mkdir(getenv("HOME")~"/.arPac/"~pkgName);
+		std.process.system("tar -xvf /tmp/packageDownloadFile.tar.gz -C ~/.arPac/"~pkgName);
 		std.file.remove("/tmp/packageDownloadFile.tar.gz");
 	}
 	catch(CurlException e){
