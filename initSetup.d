@@ -2,11 +2,14 @@ module initSetup;
 import std.file;
 import std.stream;
 //import std.regex;
+import std.process;
 import fileReader;
+import core.thread;
+
+//All of this stuff should be concurrent except the first part, so create three threads to make these files
 void setupFirstTime(){
-	removePrevTraces();
-	setupPackageList();
-	setupUSEFlags();
+	Thread t = new Thread(&removePrevTraces);
+	t.start();
 }
 
 void setupUSEFlags(){
@@ -17,12 +20,10 @@ void setupUSEFlags(){
 	useFlagsFile.close();
 }
 void setupPorts(){
-	std.file.mkdir("~/.arPac");
-	std.file.mkdir("/etc/arPac/ports");
-	std.file.mkdir("~/.arPac/tmp");
+	std.file.mkdirRecurse("/etc/arPac/ports");
+	std.file.mkdirRecurse(getenv("HOME")~"/.arPac/tmp");
 }
 void setupPackageList(){
-	std.file.mkdir("/etc/arPac");
 	File packageList = new File;
 	packageList.create("/etc/arPac/sources.list");
 	packageList.writeLine("#This is where you can store your mirrors you wish to hold.");
@@ -33,5 +34,15 @@ void setupPackageList(){
 void removePrevTraces(){
 	if (std.file.exists("/etc/arPac")){
 		std.file.rmdirRecurse("/etc/arPac");
+		std.file.mkdir("/etc/arPac");
 	}
+	if (std.file.exists(getenv("HOME")~"/.arPac/")){
+		std.file.rmdirRecurse(getenv("HOME")~"/.arPac/");
+		std.file.mkdir(getenv("HOME")~"/.arPac/");
+	}
+	setupPorts();
+	Thread t2 = new Thread(&setupPackageList);
+        Thread t3 = new Thread(&setupUSEFlags);
+        t2.start();
+        t3.start();
 }

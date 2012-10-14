@@ -1,5 +1,6 @@
 import std.stdio;
 import std.string;
+import std.process;
 import initSetup;
 import updater;
 import install;
@@ -8,7 +9,7 @@ import uploader;
 
 void main(string[] args){
 	//If file doesn't exist, actually initiate package manager
-	if (!std.file.exists("/etc/arPac")){
+	if (!std.file.exists("/etc/arPac") || !std.file.exists(getenv("HOME")~"/.arPac/")){
 		initSetup.setupFirstTime();
 	}
 	else{
