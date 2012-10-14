@@ -6,6 +6,7 @@ import updater;
 import install;
 import authorTool;
 import uploader;
+import remover;
 
 void main(string[] args){
 	//If file doesn't exist, actually initiate package manager
@@ -29,6 +30,7 @@ void main(string[] args){
 					}
 					break;
 				case "remove":
+					remover.removePackages(args[2..args.length]);
 					break;
 				case "upload":
 					uploader.uploadFiles(args[2..args.length]);
