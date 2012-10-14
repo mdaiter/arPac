@@ -5,7 +5,7 @@ import std.string;
 import std.process;
 import std.net.curl;
 import builder;
-
+import packageStripper;
 /*Because structs didn't work in passing into a function... :-(*/
 class buildTemplate{
 	private string[] allUseFlags;
@@ -57,7 +57,6 @@ void installPackages(string[] packageList){
 			*/
 			foreach(string d; dirEntries("/etc/arPac/ports","*.arPak", SpanMode.depth)){
                			writefln("Searching %s for %s", chompPrefix(d,"/etc/arPac/ports/"), packageList[i]);
-				//auto ctr = regex("/*/");
 				if (strip(chompPrefix(d, "/etc/arPac/ports/")) == strip(packageList[i])){
 					writeln("Found package!");
 					wasFound = true;
@@ -87,8 +86,13 @@ private void instantiateInstall(string packageName){
 			writefln("Starting the build of %s", line[8..line.length]);
 		}
 		if (line.length > 6 && line[0..7] == "SOURCE="){
-			writeln(line[8..line.length]~"is the dpin");
-			downloadAndUnzip(line[8..line.length], packageName);
+			writeln(line[7..line.length]~"is the dpin");
+			string dirOfUnzip = downloadAndUnzip(line[7..line.length], packageName);
+			foreach(d; dirEntries(dirOfUnzip, SpanMode.depth)){
+				if (d.name()[d.name().length-4..d.name().length] == ".pde"){
+					packageStripper.stripFile(buildFile,d.name());
+				}
+			}
 		}
 		if (line.length > 3 && line[0..4] == "USE="){
 			writefln("Got past first %s", line[4..line.length]);
@@ -97,7 +101,7 @@ private void instantiateInstall(string packageName){
 		}
 		if (line.length > 7 && line[0..8] == "build(){"){
 			writeln("Hit build()!");
-			builder.buildMeta(buildFile, packageName);
+			builder.buildMeta(buildFile, packageName, getBuildDir(packageName));
 		}
 	}
 }
@@ -114,22 +118,40 @@ private void generateUSE(buildTemplate sampleBuildFile, string lineOfUseFlags, s
 			break;
 		}
 	}
-	if (packageUseDefined == false){
-		writeln("Got past third");
-		sampleBuildFile.setUserWantedFlags(sampleBuildFile.allUseFlags);
-	}
 }
 
-private void downloadAndUnzip(char[] downloadFile, string pkgName){
+public string getBuildDir(string pkgName){
+	string fileToCreateStr;
+	string[] fileToCreateArr = chompPrefix(pkgName, "/etc/arPac/ports/").split("/");
+        string endFile = cast(string)fileToCreateArr[fileToCreateArr.length - 1];
+        //Need to make the bound so that we don't get a .arPak at the end
+        endFile = cast(string)endFile[0..endFile.length - 6];
+        fileToCreateArr = cast(string[])fileToCreateArr[0..fileToCreateArr.length - 1];
+        for (int i = 0; i < fileToCreateArr.length; i++){
+                fileToCreateStr ~= fileToCreateArr[i] ~ "/";
+        }
+        fileToCreateStr ~= endFile;
+        fileToCreateStr = getenv("HOME") ~ "/.arPac/" ~ fileToCreateStr;
+	return fileToCreateStr;
+}
+
+private string downloadAndUnzip(char[] downloadFile, string pkgName){
+	string fileToCreateStr = getBuildDir(pkgName);
 	try{
-		download(downloadFile, "/tmp/tmpDownloadFile.tar.gz");
-		std.file.mkdir(getenv("HOME")~"/.arPac/"~pkgName);
-		std.process.system("tar -xvf /tmp/packageDownloadFile.tar.gz -C ~/.arPac/"~pkgName);
+		download(downloadFile, "/tmp/packageDownloadFile.tar.gz");
+		/*Directory to make +
+		to remove*/
+		if (exists(fileToCreateStr)){
+			std.file.rmdirRecurse(fileToCreateStr);
+		}
+		std.file.mkdirRecurse(fileToCreateStr);
+		std.process.system("tar -xvf /tmp/packageDownloadFile.tar.gz -C " ~ fileToCreateStr);
 		std.file.remove("/tmp/packageDownloadFile.tar.gz");
 	}
 	catch(CurlException e){
 		writeln("Couldn't download file from source specified...");
 	}
+		return fileToCreateStr;
 
 }
 

@@ -3,6 +3,8 @@ import std.string;
 import initSetup;
 import updater;
 import install;
+import authorTool;
+import uploader;
 
 void main(string[] args){
 	//If file doesn't exist, actually initiate package manager
@@ -27,10 +29,17 @@ void main(string[] args){
 					break;
 				case "remove":
 					break;
+				case "upload":
+					uploader.uploadFiles(args[2..args.length]);
+					break;
+				case "author":
+					authorTool.lookupAuthors(args[2..args.length]);
+					break;
+				case "license":
+					authorTool.lookupLicense(args[2..args.length]);
+					break;
 				case "update":
 					updater.updatePorts();
-					break;
-				case "upgrade":
 					break;
 				default:
 					throw new Exception("unknown option");

@@ -13,11 +13,12 @@ void setupUSEFlags(){
 	File useFlagsFile = new File;
 	useFlagsFile.create("/etc/arPac/package.use");
 	useFlagsFile.writeLine("#This is where you can set USE flags");
-	useFlagsFile.writeLine("#If you've ever used Gentoo, this is the same (there isn't a make.conf file; instead, everything is per package).");
+	useFlagsFile.writeLine("#If you've ever used Gentoo, this is the same, but opposite (there isn't a make.conf file; instead, everything is per package). Everything here DISABLES flags within compiled programs.");
 	useFlagsFile.close();
 }
 void setupPorts(){
 	std.file.mkdir("~/.arPac");
+	std.file.mkdir("/etc/arPac/ports");
 	std.file.mkdir("~/.arPac/tmp");
 }
 void setupPackageList(){
@@ -31,8 +32,6 @@ void setupPackageList(){
 
 void removePrevTraces(){
 	if (std.file.exists("/etc/arPac")){
-		std.file.remove(r"/etc/arPac/sources.list");
-		std.file.remove("/etc/arPac/package.use");
-		std.file.rmdir("/etc/arPac");
+		std.file.rmdirRecurse("/etc/arPac");
 	}
 }
