@@ -5,12 +5,13 @@ import std.string;
 import install;
 import std.algorithm;
 import buildTools;
-
+//Meta command
 public void stripFile(buildTemplate sampBuild, string pkgname){
+	//Strip all flags after doing use flag stuff.
 	stripUseFlags(sampBuild, pkgname);
 	stripAllFlags(sampBuild, pkgname);
 }
-
+//Stirp all flags
 private void stripAllFlags(buildTemplate sampBuild, string pkgname){
 	strFileFlags(sampBuild.getAllUseFlags(), pkgname, true);
 }

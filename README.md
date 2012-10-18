@@ -13,3 +13,6 @@ Where can I find more info?
 <h3>
 Look to our wiki!
 </h3>
+<h6>
+Contact me at mdaiter@exeter.edu!
+</h6>

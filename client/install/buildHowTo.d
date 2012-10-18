@@ -5,7 +5,7 @@ import std.string;
 //Only needed for the build template class
 import install;
 import buildTools;
-
+//Mkae it easy, only one build command
 void buildMeta(buildTemplate sampleBuild, string locFileScript, string buildDirectory){
 	getBuildScript(sampleBuild, locFileScript, buildDirectory);
 	parseBuildScript(sampleBuild);
@@ -16,6 +16,12 @@ private void getBuildScript(buildTemplate simBuild, string locScript, string bui
 	//No way to get specific amount of lines in file. using shorts
 	/*
 		No support for loops or conditions yet...sorry....
+		Because I think this isn't really self explanatory, I can explain:
+			Go through file
+			If file hits bracket, go through again
+			Once you're after the bracket, continue doing commands
+				Make sure it isn't a comment
+			Once you hit a }, quit.
 	*/
 	short lineCount = 0;
 	foreach(line; File(locScript).byLine()){
@@ -34,7 +40,6 @@ private void getBuildScript(buildTemplate simBuild, string locScript, string bui
 						chdir(buildDirectory);
 						simBuild.setBuildCommands(splitLines(tempBuildDirs));
 						simBuild.getBuildCommands().writeln();
-						writeln("Just hit here");
 						break;
 					}
 				}
@@ -46,6 +51,7 @@ private void getBuildScript(buildTemplate simBuild, string locScript, string bui
 	}	
 }
 
+//Execute all of the build scripts on a package.
 private void parseBuildScript(buildTemplate build){
 	string[] tempStrList = build.getBuildCommands();
 	for (int i = 0; i < tempStrList.length; i++){
